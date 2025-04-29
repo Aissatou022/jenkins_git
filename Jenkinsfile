@@ -2,62 +2,32 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_USER = 'aicha037'
-        BACKEND_IMAGE = "${DOCKER_USER}/appprof-frontend"
-        FRONTEND_IMAGE = "${DOCKER_USER}/appprof-backend"
-        MIGRATE_IMAGE = "${DOCKER_USER}/appprof-migrate"
+        SONARQUBE_SERVER = 'SonarQube'   // Nom de ton serveur Sonar dans Jenkins
+        SONARQUBE_TOKEN = credentials('sonar-token')  // ID de ton credential
     }
 
     stages {
-        stage('Cloner le dépôt') {
+        stage('Checkout SCM') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/Aissatou022/jenkins_git.git'
+                checkout scm
             }
         }
-
-        stage('Build des images') {
-    steps {
-        bat "docker build -t %BACKEND_IMAGE%:latest ./Backend/odc"
-        bat "docker build -t %FRONTEND_IMAGE%:latest ./Frontend"
-        bat "docker build -t %MIGRATE_IMAGE%:latest ./Backend/odc"
-    }
-}
-
-        
-
-       stage('Push des images sur Docker Hub') {
-    steps {
-        withDockerRegistry([credentialsId: 'docker_cred', url: '']) {
-            bat "docker push %BACKEND_IMAGE%:latest"
-            bat "docker push %FRONTEND_IMAGE%:latest"
-            bat "docker push %MIGRATE_IMAGE%:latest"
-        }
-    }
-}
-
-
-        stage('Déploiement Local avec Docker Compose') {
+       
+        stage('SonarQube Analysis') {
             steps {
-                bat '''
-                    docker-compose down || true
-                    docker-compose pull
-                    docker-compose up -d --build
-                '''
+                withSonarQubeEnv("${SONARQUBE_SERVER}") {
+                    script {
+                        def scannerHome = tool 'SonarScanner' // <- Ici on charge SonarScanner installé dans Jenkins
+                        sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                              -Dsonar.projectKey=projet-file-rouge \
+                              -Dsonar.sources=. \
+                              -Dsonar.host.url=http://18.237.32.65:9000 \
+                              -Dsonar.login=sqp_bdb698d0597411f0db078ca1b21afb28c91cfb26
+                        """
+                    }
+                }
             }
-        }
-    }
-
-    post {
-        success {
-            mail to: 'dieye6526@gmail.com',
-                 subject: "✅ Déploiement local réussi!",
-                 body: "L'application a été déployée localement avec succès."
-        }
-        failure {
-            mail to: 'dieye6526@gmail.com',
-                 subject: "❌ Échec du pipeline Jenkins",
-                 body: "Une erreur s'est produite, merci de vérifier Jenkins."
         }
     }
 }
