@@ -20,10 +20,10 @@ pipeline {
                         def scannerHome = tool 'SonarScanner' // <- Ici on charge SonarScanner installé dans Jenkins
                         sh """
                             ${scannerHome}/bin/sonar-scanner \
-                              -Dsonar.projectKey=projet-file-rouge \
+                              -Dsonar.projectKey=jenkins-sonar \
                               -Dsonar.sources=. \
-                              -Dsonar.host.url=http://18.237.32.65:9000 \
-                              -Dsonar.login=sqp_bdb698d0597411f0db078ca1b21afb28c91cfb26
+                              -Dsonar.host.url=http://localhost:9000 \
+                              -Dsonar.token=$SONARQUBE_TOKEN
                         """
                     }
                 }
@@ -31,3 +31,5 @@ pipeline {
         }
     }
 }
+
+
