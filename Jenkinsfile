@@ -17,7 +17,7 @@ pipeline {
             steps {
                 withSonarQubeEnv("${SONARQUBE_SERVER}") {
                     script {
-                        def scannerHome = tool 'SonarScanner' // <- Ici on charge SonarScanner installé dans Jenkins
+                        def scannerHome = tool 'scanner-sonnar' // <- Ici on charge SonarScanner installé dans Jenkins
                         sh """
                             ${scannerHome}/bin/sonar-scanner \
                               -Dsonar.projectKey=jenkins-sonar \
